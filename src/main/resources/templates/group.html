@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <link rel="stylesheet" th:href="@{/styles.css}">
+  <title>Students of Group</title>
+  <script th:inline="javascript">
+    function addStudent(groupId) {
+      const studentName = document.getElementById('studentName').value;
+      fetch(`/group/${groupId}/addStudent`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ name: studentName }),
+      })
+              .then(async response => {
+                console.log('Response status:', response.status);
+                if (!response.ok) {
+                  const errorText = await response.text();
+                  console.error('Error text:', errorText);
+                  throw new Error(`HTTP error! Status: ${response.status}, ${errorText}`);
+                }
+                return response.json();
+              })
+              .then(student => {
+                console.log(student)
+                if (student.success) {
+                  const tableBody = document.querySelector('table tbody');
+                  const tr = document.createElement('tr');
+                  tr.setAttribute('id', `student-${student.data.id}`);
+
+                  const tdCreateDate = document.createElement('td');
+                  tdCreateDate.textContent = student.data.createDate;
+                  tr.appendChild(tdCreateDate);
+
+                  const tdFullName = document.createElement('td');
+                  tdFullName.textContent = student.data.fullName;
+                  tr.appendChild(tdFullName);
+
+                  const tdActions = document.createElement('td');
+                  const deleteButton = document.createElement('button');
+                  deleteButton.textContent = 'Delete';
+                  deleteButton.addEventListener('click', () => {
+                    removeStudent(groupId, student.data.id);
+                  });
+                  tdActions.appendChild(deleteButton);
+                  tr.appendChild(tdActions);
+
+                  tableBody.appendChild(tr);
+
+                  document.getElementById('studentName').value = '';
+                } else {
+                  alert('Error adding student.');
+                }
+              })
+              .catch(error => {
+                console.error('Error:', error);
+              });
+    }
+
+    function removeStudent(groupId, studentId) {
+      fetch(`/group/${groupId}/removeStudent/${studentId}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+              .then(async response => {
+                console.log('Response status:', response.status);
+                if (!response.ok) {
+                  const errorText = await response.text();
+                  console.error('Error text:', errorText);
+                  throw new Error(`HTTP error! Status: ${response.status}, ${errorText}`);
+                }
+                return response.json();
+              })
+              .then(result => {
+                if (result.success) {
+                  const studentRow = document.getElementById('student-' + studentId);
+                  studentRow.remove()
+                } else {
+                  alert('Error removing student.');
+                }
+              })
+              .catch(error => {
+                console.error('Error:', error);
+              });
+    }
+  </script>
+</head>
+<body>
+
+<p><strong>Группа №</strong> <span th:text="${group.number}">Group Number</span></p>
+<table id="student_table">
+  <thead>
+  <tr>
+    <th>Дата принятия</th>
+    <th>ФИО студента</th>
+    <th>Действия</th>
+  </tr>
+  </thead>
+  <tbody>
+  <tr th:each="student : ${students}" th:attr="id='student-' + ${student.id}">
+    <td th:text="${student.createDate}">2021-01-01</td>
+    <td th:text="${student.fullName}">John Doe</td>
+    <td>
+      <button th:attr="data-groupId=${group.id},data-studentId=${student.id}" onclick="removeStudent(this.getAttribute('data-groupId'), this.getAttribute('data-studentId'))">Delete</button>
+    </td>
+
+  </tr>
+  </tbody>
+</table>
+<br>
+<div class="fio">
+  <input type="text" id="studentName" placeholder="ФИО">
+  <button type="button" th:onclick="'addStudent(' + ${group.id} + ')'">Принять нового студента</button>
+</div>
+<br>
+<a type="button" th:href="@{/groups}">Вернуться к списку групп</a>
+</body>
+</html>
+

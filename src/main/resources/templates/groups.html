@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <link rel="stylesheet" th:href="@{/styles.css}">
+    <title>Group List</title>
+</head>
+<body>
+<h1>Группы университета ScaleApps</h1>
+
+<table>
+    <thead>
+    <tr>
+        <th>Номер</th>
+        <th>Количество студентов</th>
+        <th>Действия</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr  th:each="group : ${groups}">
+        <td th:text="${group.number}">Номер группы</td>
+        <td th:text="${group.students.size()}">Количество</td>
+        <td> <a th:href="@{'/group?id=' + ${group.id}}">Edit</a></td>
+    </tr>
+    </tbody>
+</table>
+<br>
+<div>
+    <form th:action="@{/groups/add}" method="post">
+        <input type="text" id="id" name="number" placeholder="Номер группы" required>
+        <button type="submit">Добавить новую группу</button>
+    </form>
+</div>
+
+</body>
+</html>
